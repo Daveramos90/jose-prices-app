@@ -28,15 +28,15 @@ const defaultData = {
     { id: "pantryCabinet", name: "Pantry cabinet", note: "Assembly", price: 90 },
     { id: "babyCribSimple", name: "Baby crib simple", note: "Basic crib", price: 100 },
     { id: "babyCribComplex", name: "Baby crib complex", note: "Complex crib", price: 200 },
+    { id: "swingSetSmall", name: "Swing set small", note: "Depends on size", price: 450 },
+    { id: "swingSetLarge", name: "Swing set large", note: "Depends on size", price: 700 },
+    { id: "gazeboSmall", name: "Gazebo / pergola small", note: "Depends on size", price: 460 },
+    { id: "gazeboLarge", name: "Gazebo / pergola large", note: "Depends on size", price: 860 },
     { id: "hourly", name: "Hourly rate", note: "Extra work per hour", price: 45 }
   ],
   custom: [
     { id: "customFurniture", name: "Custom made furniture", note: "Labor hours + material cost + markup", price: 0, quoteMode: "custom" },
     { id: "customHourly", name: "Custom hourly rate", note: "Simple lumber work", price: 55 },
-    { id: "swingSetSmall", name: "Swing set small", note: "Depends on size", price: 450 },
-    { id: "swingSetLarge", name: "Swing set large", note: "Depends on size", price: 700 },
-    { id: "gazeboSmall", name: "Gazebo / pergola small", note: "Depends on size", price: 460 },
-    { id: "gazeboLarge", name: "Gazebo / pergola large", note: "Depends on size", price: 860 },
     { id: "materialMarkup", name: "Material markup %", note: "Add on top of material cost", price: 20 },
     { id: "pickup", name: "Material pickup", note: "Store pickup and handling", price: 35 }
   ],
@@ -48,6 +48,7 @@ const defaultData = {
 };
 
 const storageKey = "jose-pricing-v3";
+const customQuoteStorageKey = "jose-custom-quote-v1";
 const removedPriceIds = ["minimum", "chandelier"];
 const forcedPriceUpdates = {
   travel: 36.25
@@ -64,7 +65,11 @@ const sectionOnlyIds = {
     "codeLock",
     "lockKeyDoorKnob",
     "smartDoorbellLow",
-    "smartDoorbellHigh"
+    "smartDoorbellHigh",
+    "swingSetSmall",
+    "swingSetLarge",
+    "gazeboSmall",
+    "gazeboLarge"
   ],
   custom: [],
   travel: []
@@ -98,6 +103,15 @@ const backupStatus = document.querySelector("#backupStatus");
 const pricePaste = document.querySelector("#pricePaste");
 const applyPastedPrices = document.querySelector("#applyPastedPrices");
 const pasteStatus = document.querySelector("#pasteStatus");
+const customProjectName = document.querySelector("#customProjectName");
+const customTabLaborHours = document.querySelector("#customTabLaborHours");
+const customTabLaborRate = document.querySelector("#customTabLaborRate");
+const materialName = document.querySelector("#materialName");
+const materialPrice = document.querySelector("#materialPrice");
+const addMaterial = document.querySelector("#addMaterial");
+const materialRows = document.querySelector("#materialRows");
+const customMaterialTotal = document.querySelector("#customMaterialTotal");
+let customQuote = loadCustomQuote();
 
 function loadData() {
   const saved = localStorage.getItem(storageKey);
@@ -164,20 +178,53 @@ function saveData() {
   backupStatus.textContent = "Saved on this device.";
 }
 
+function loadCustomQuote() {
+  const saved = localStorage.getItem(customQuoteStorageKey);
+  if (!saved) return { projectName: "", materials: [] };
+
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      projectName: parsed.projectName || "",
+      materials: Array.isArray(parsed.materials) ? parsed.materials : []
+    };
+  } catch {
+    return { projectName: "", materials: [] };
+  }
+}
+
+function saveCustomQuote() {
+  localStorage.setItem(customQuoteStorageKey, JSON.stringify(customQuote));
+}
+
 function syncCustomLaborRate() {
   const customHourly = findItem("customHourly");
-  if (customHourly) customLaborRate.value = customHourly.price;
+  if (!customHourly) return;
+  customLaborRate.value = customHourly.price;
+  customTabLaborRate.value = customHourly.price;
 }
 
 function saveCustomLaborRate() {
   const customHourly = findItem("customHourly");
   if (!customHourly) return;
-  customHourly.price = Number(customLaborRate.value || 0);
+  customHourly.price = Number(customLaborRate.value || customTabLaborRate.value || 0);
+  customLaborRate.value = customHourly.price;
+  customTabLaborRate.value = customHourly.price;
   saveData();
 }
 
 function roundPrice(value) {
   return Math.round(Number(value || 0) * 100) / 100;
+}
+
+function materialTotal() {
+  return customQuote.materials.reduce((total, material) => total + Number(material.price || 0), 0);
+}
+
+function syncCustomQuoteFields() {
+  customProjectName.value = customQuote.projectName;
+  materialCost.value = roundPrice(materialTotal());
+  customTabLaborHours.value = extraHours.value;
 }
 
 function allItems() {
@@ -209,6 +256,8 @@ function renderPriceList(section, containerId) {
   container.innerHTML = "";
 
   data[section].forEach((item) => {
+    if (item.quoteMode === "custom") return;
+
     const row = document.createElement("div");
     row.className = "price-row";
     row.innerHTML = `
@@ -228,6 +277,32 @@ function renderPriceList(section, containerId) {
 
     container.appendChild(row);
   });
+}
+
+function renderMaterials() {
+  materialRows.innerHTML = "";
+
+  customQuote.materials.forEach((material, index) => {
+    const row = document.createElement("div");
+    row.className = "material-row";
+    row.innerHTML = `
+      <strong>${material.name || "Material"}</strong>
+      <span>${money.format(roundPrice(material.price))}</span>
+      <button class="remove-material" type="button" aria-label="Remove material">X</button>
+    `;
+
+    row.querySelector("button").addEventListener("click", () => {
+      customQuote.materials.splice(index, 1);
+      saveCustomQuote();
+      renderMaterials();
+      syncCustomQuoteFields();
+      updateQuote();
+    });
+
+    materialRows.appendChild(row);
+  });
+
+  customMaterialTotal.textContent = money.format(roundPrice(materialTotal()));
 }
 
 function renderJobOptions() {
@@ -270,7 +345,12 @@ function updateQuote() {
   quoteBreakdown.textContent = isCustomQuote
     ? `Base: ${money.format(roundPrice(base))} + labor: ${money.format(roundPrice(extra))} + materials: ${money.format(roundPrice(materialsWithMarkup))} + pickup: ${money.format(roundPrice(pickup))} + gas/miles: ${money.format(roundPrice(travel))}`
     : `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))}`;
-  customerMessage.value = `Hi, this is Jose. I can help with the ${baseItem?.name.toLowerCase() || "job"}. Based on the details, my estimated price is ${money.format(total)}. Please send me the item link or photos, your location, and the best time for you so I can confirm the final price. Thanks.`;
+  const customName = customProjectName.value.trim();
+  const jobName = isCustomQuote && customName ? customName : baseItem?.name.toLowerCase() || "job";
+  const materialText = isCustomQuote && customQuote.materials.length
+    ? ` This includes materials listed for the job and labor time.`
+    : "";
+  customerMessage.value = `Hi, this is Jose. I can help with the ${jobName}. Based on the details, my estimated price is ${money.format(total)}.${materialText} Please send me the measurements, photos, location, and the best time for you so I can confirm the final price. Thanks.`;
 }
 
 function switchTab(tabId) {
@@ -299,6 +379,52 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
 customLaborRate.addEventListener("input", saveCustomLaborRate);
 customLaborRate.addEventListener("change", saveCustomLaborRate);
+
+customTabLaborRate.addEventListener("input", () => {
+  customLaborRate.value = customTabLaborRate.value;
+  saveCustomLaborRate();
+  updateQuote();
+});
+
+customTabLaborRate.addEventListener("change", () => {
+  customLaborRate.value = customTabLaborRate.value;
+  saveCustomLaborRate();
+  updateQuote();
+});
+
+customTabLaborHours.addEventListener("input", () => {
+  extraHours.value = customTabLaborHours.value;
+  updateQuote();
+});
+
+customTabLaborHours.addEventListener("change", () => {
+  extraHours.value = customTabLaborHours.value;
+  updateQuote();
+});
+
+customProjectName.addEventListener("input", () => {
+  customQuote.projectName = customProjectName.value;
+  saveCustomQuote();
+  updateQuote();
+});
+
+addMaterial.addEventListener("click", () => {
+  const name = materialName.value.trim();
+  const price = Number(materialPrice.value || 0);
+  if (!name && !price) return;
+
+  customQuote.materials.push({
+    name: name || "Material",
+    price
+  });
+
+  materialName.value = "";
+  materialPrice.value = "0";
+  saveCustomQuote();
+  renderMaterials();
+  syncCustomQuoteFields();
+  updateQuote();
+});
 
 copyMessage.addEventListener("click", async () => {
   if (navigator.clipboard) {
@@ -383,7 +509,9 @@ function renderAll() {
   renderPriceList("assembly", "#assemblyList");
   renderPriceList("custom", "#customList");
   renderPriceList("travel", "#travelList");
+  renderMaterials();
   syncCustomLaborRate();
+  syncCustomQuoteFields();
   renderJobOptions();
   updateQuote();
 }

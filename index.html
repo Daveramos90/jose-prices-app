@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#1f4f46">
     <title>Jose Prices</title>
-    <link rel="manifest" href="manifest.json?v=10">
-    <link rel="stylesheet" href="styles.css?v=10">
+    <link rel="manifest" href="manifest.json?v=15">
+    <link rel="stylesheet" href="styles.css?v=15">
   </head>
   <body>
     <main class="app-shell">
@@ -37,8 +37,23 @@
             <input id="quantity" type="number" min="1" step="1" value="1">
           </label>
           <label class="field">
-            <span>Extra hours</span>
+            <span id="extraHoursLabel">Extra hours</span>
             <input id="extraHours" type="number" min="0" step="0.5" value="0">
+          </label>
+        </div>
+
+        <div class="custom-quote-fields" id="customQuoteFields">
+          <label class="field">
+            <span>Custom hourly rate</span>
+            <input id="customLaborRate" type="number" min="0" step="0.01" value="55">
+          </label>
+          <label class="field">
+            <span>Material cost</span>
+            <input id="materialCost" type="number" min="0" step="0.01" value="0">
+          </label>
+          <label class="check-row">
+            <input id="materialPickup" type="checkbox">
+            <span>Add material pickup</span>
           </label>
         </div>
 
@@ -99,6 +114,42 @@
           <h2 id="customTitle">Custom Lumber Work</h2>
           <p>For simple work with 2x4s, plywood, shelves, frames, and small builds.</p>
         </div>
+        <div class="custom-builder" aria-labelledby="customBuilderTitle">
+          <div>
+            <p class="eyebrow">Custom quote</p>
+            <h2 id="customBuilderTitle">Materials & labor</h2>
+          </div>
+          <label class="field">
+            <span>Project name</span>
+            <input id="customProjectName" type="text" placeholder="Example: custom shelf">
+          </label>
+          <div class="grid-two">
+            <label class="field">
+              <span>Labor hours</span>
+              <input id="customTabLaborHours" type="number" min="0" step="0.5" value="0">
+            </label>
+            <label class="field">
+              <span>Labor rate</span>
+              <input id="customTabLaborRate" type="number" min="0" step="0.01" value="55">
+            </label>
+          </div>
+          <div class="material-add">
+            <label class="field">
+              <span>Material</span>
+              <input id="materialName" type="text" placeholder="Example: 2x4 lumber">
+            </label>
+            <label class="field">
+              <span>Cost</span>
+              <input id="materialPrice" type="number" min="0" step="0.01" value="0">
+            </label>
+            <button class="secondary-button" id="addMaterial" type="button">Add material</button>
+          </div>
+          <div class="material-list" id="materialRows"></div>
+          <div class="total-box compact-total">
+            <span>Material total</span>
+            <strong id="customMaterialTotal">$0</strong>
+          </div>
+        </div>
         <div class="price-list" id="customList"></div>
       </section>
 
@@ -111,6 +162,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=15"></script>
   </body>
 </html>
