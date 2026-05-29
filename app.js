@@ -13,6 +13,13 @@ const defaultData = {
     { id: "knobs", name: "Kitchen / drawer knobs", note: "Per knob", price: 10 },
     { id: "entertainmentCenter", name: "Entertainment center", note: "Assembly", price: 80 },
     { id: "tvMount", name: "TV mount", note: "$92 each TV", price: 92 },
+    { id: "chandelier", name: "Chandelier", note: "Depends on weight, height, and complexity", price: 400 },
+    { id: "ceilingFan", name: "Ceiling fan", note: "Each, depends on switch wiring", price: 150 },
+    { id: "simpleDoorKnobs", name: "Simple door knobs", note: "Basic door knob", price: 10 },
+    { id: "codeLock", name: "Code lock for doors", note: "Keypad/code lock install", price: 50 },
+    { id: "lockKeyDoorKnob", name: "Lock key door knob", note: "Locking keyed door knob", price: 20 },
+    { id: "smartDoorbellLow", name: "Smart doorbell simple", note: "Simple install", price: 50 },
+    { id: "smartDoorbellHigh", name: "Smart doorbell complex", note: "More difficult install", price: 90 },
     { id: "diningTableLow", name: "Dining table simple", note: "Simple dining table", price: 85 },
     { id: "diningTableHigh", name: "Dining table larger", note: "Larger or more complex table", price: 150 },
     { id: "pantryCabinet", name: "Pantry cabinet", note: "Assembly", price: 90 },
@@ -31,13 +38,6 @@ const defaultData = {
   ],
   travel: [
     { id: "travel", name: "Gas / miles fee", note: "Within a 50 mile radius", price: 75 },
-    { id: "chandelier", name: "Chandelier", note: "Depends on weight, height, and complexity", price: 400 },
-    { id: "ceilingFan", name: "Ceiling fan", note: "Each, depends on switch wiring", price: 150 },
-    { id: "simpleDoorKnobs", name: "Simple door knobs", note: "Basic door knob", price: 10 },
-    { id: "codeLock", name: "Code lock for doors", note: "Keypad/code lock install", price: 50 },
-    { id: "lockKeyDoorKnob", name: "Lock key door knob", note: "Locking keyed door knob", price: 20 },
-    { id: "smartDoorbellLow", name: "Smart doorbell simple", note: "Simple install", price: 50 },
-    { id: "smartDoorbellHigh", name: "Smart doorbell complex", note: "More difficult install", price: 90 },
     { id: "stairs", name: "Stairs / heavy item", note: "Extra effort fee", price: 25 },
     { id: "sameDay", name: "Same-day job", note: "Rush fee", price: 30 }
   ]
@@ -45,6 +45,20 @@ const defaultData = {
 
 const storageKey = "jose-pricing-v3";
 const removedPriceIds = ["minimum"];
+const sectionOnlyIds = {
+  assembly: [
+    "tvMount",
+    "chandelier",
+    "ceilingFan",
+    "simpleDoorKnobs",
+    "codeLock",
+    "lockKeyDoorKnob",
+    "smartDoorbellLow",
+    "smartDoorbellHigh"
+  ],
+  custom: [],
+  travel: []
+};
 let data = loadData();
 
 const money = new Intl.NumberFormat("en-US", {
@@ -74,7 +88,7 @@ function loadData() {
   if (!saved) return cleanupData(cloneData(defaultData));
 
   try {
-    return cleanupData({ ...cloneData(defaultData), ...JSON.parse(saved) });
+    return cleanupData(mergeSavedData(JSON.parse(saved)));
   } catch {
     return cleanupData(cloneData(defaultData));
   }
@@ -89,7 +103,35 @@ function cleanupData(source) {
     source[section] = (source[section] || []).filter((item) => !removedPriceIds.includes(item.id));
   });
 
+  Object.entries(sectionOnlyIds).forEach(([correctSection, ids]) => {
+    ids.forEach((id) => {
+      ["assembly", "custom", "travel"].forEach((section) => {
+        if (section === correctSection) return;
+        source[section] = source[section].filter((item) => item.id !== id);
+      });
+    });
+  });
+
   return source;
+}
+
+function mergeSavedData(savedData) {
+  const nextData = cloneData(defaultData);
+
+  ["assembly", "custom", "travel"].forEach((section) => {
+    const savedItems = Array.isArray(savedData[section]) ? savedData[section] : [];
+
+    savedItems.forEach((savedItem) => {
+      const existingItem = nextData[section].find((item) => item.id === savedItem.id);
+      if (existingItem) {
+        existingItem.price = Number(savedItem.price || 0);
+      } else {
+        nextData[section].push(savedItem);
+      }
+    });
+  });
+
+  return nextData;
 }
 
 function saveData() {
