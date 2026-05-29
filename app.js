@@ -43,7 +43,8 @@ const defaultData = {
   ]
 };
 
-const storageKey = "jose-pricing-v2";
+const storageKey = "jose-pricing-v3";
+const removedPriceIds = ["minimum"];
 let data = loadData();
 
 const money = new Intl.NumberFormat("en-US", {
@@ -69,17 +70,25 @@ const pasteStatus = document.querySelector("#pasteStatus");
 
 function loadData() {
   const saved = localStorage.getItem(storageKey);
-  if (!saved) return cloneData(defaultData);
+  if (!saved) return cleanupData(cloneData(defaultData));
 
   try {
-    return { ...cloneData(defaultData), ...JSON.parse(saved) };
+    return cleanupData({ ...cloneData(defaultData), ...JSON.parse(saved) });
   } catch {
-    return cloneData(defaultData);
+    return cleanupData(cloneData(defaultData));
   }
 }
 
 function cloneData(source) {
   return JSON.parse(JSON.stringify(source));
+}
+
+function cleanupData(source) {
+  ["assembly", "custom", "travel"].forEach((section) => {
+    source[section] = (source[section] || []).filter((item) => !removedPriceIds.includes(item.id));
+  });
+
+  return source;
 }
 
 function saveData() {
@@ -211,11 +220,11 @@ importPrices.addEventListener("change", async (event) => {
 
   try {
     const imported = JSON.parse(await file.text());
-    data = {
+    data = cleanupData({
       assembly: Array.isArray(imported.assembly) ? imported.assembly : data.assembly,
       custom: Array.isArray(imported.custom) ? imported.custom : data.custom,
       travel: Array.isArray(imported.travel) ? imported.travel : data.travel
-    };
+    });
     saveData();
     renderAll();
     backupStatus.textContent = "Imported price file.";
