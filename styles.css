@@ -165,7 +165,7 @@ textarea {
 
 .material-add {
   display: grid;
-  grid-template-columns: 1fr 110px;
+  grid-template-columns: 1fr 76px 110px;
   gap: 10px;
 }
 
@@ -180,7 +180,7 @@ textarea {
 
 .material-row {
   display: grid;
-  grid-template-columns: 1fr 92px 42px;
+  grid-template-columns: 1fr 72px 92px 42px;
   gap: 8px;
   align-items: center;
   min-height: 48px;

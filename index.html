@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#1f4f46">
     <title>Jose Prices</title>
-    <link rel="manifest" href="manifest.json?v=15">
-    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="manifest" href="manifest.json?v=16">
+    <link rel="stylesheet" href="styles.css?v=16">
   </head>
   <body>
     <main class="app-shell">
@@ -139,7 +139,11 @@
               <input id="materialName" type="text" placeholder="Example: 2x4 lumber">
             </label>
             <label class="field">
-              <span>Cost</span>
+              <span>Qty</span>
+              <input id="materialQty" type="number" min="0" step="1" value="1">
+            </label>
+            <label class="field">
+              <span>Cost per</span>
               <input id="materialPrice" type="number" min="0" step="0.01" value="0">
             </label>
             <button class="secondary-button" id="addMaterial" type="button">Add material</button>
@@ -162,6 +166,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=16"></script>
   </body>
 </html>

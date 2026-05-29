@@ -107,6 +107,7 @@ const customProjectName = document.querySelector("#customProjectName");
 const customTabLaborHours = document.querySelector("#customTabLaborHours");
 const customTabLaborRate = document.querySelector("#customTabLaborRate");
 const materialName = document.querySelector("#materialName");
+const materialQty = document.querySelector("#materialQty");
 const materialPrice = document.querySelector("#materialPrice");
 const addMaterial = document.querySelector("#addMaterial");
 const materialRows = document.querySelector("#materialRows");
@@ -218,7 +219,10 @@ function roundPrice(value) {
 }
 
 function materialTotal() {
-  return customQuote.materials.reduce((total, material) => total + Number(material.price || 0), 0);
+  return customQuote.materials.reduce((total, material) => {
+    const quantity = Number(material.quantity || 1);
+    return total + quantity * Number(material.price || 0);
+  }, 0);
 }
 
 function syncCustomQuoteFields() {
@@ -285,9 +289,12 @@ function renderMaterials() {
   customQuote.materials.forEach((material, index) => {
     const row = document.createElement("div");
     row.className = "material-row";
+    const quantity = Number(material.quantity || 1);
+    const lineTotal = quantity * Number(material.price || 0);
     row.innerHTML = `
       <strong>${material.name || "Material"}</strong>
-      <span>${money.format(roundPrice(material.price))}</span>
+      <span>${quantity} x</span>
+      <span>${money.format(roundPrice(lineTotal))}</span>
       <button class="remove-material" type="button" aria-label="Remove material">X</button>
     `;
 
@@ -410,15 +417,18 @@ customProjectName.addEventListener("input", () => {
 
 addMaterial.addEventListener("click", () => {
   const name = materialName.value.trim();
+  const quantity = Number(materialQty.value || 1);
   const price = Number(materialPrice.value || 0);
   if (!name && !price) return;
 
   customQuote.materials.push({
     name: name || "Material",
+    quantity,
     price
   });
 
   materialName.value = "";
+  materialQty.value = "1";
   materialPrice.value = "0";
   saveCustomQuote();
   renderMaterials();
