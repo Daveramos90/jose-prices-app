@@ -1,6 +1,5 @@
 const defaultData = {
   assembly: [
-    { id: "minimum", name: "Minimum job", note: "Use this even for small jobs", price: 75 },
     { id: "curtainRods", name: "Curtain rods", note: "Per basic curtain rod", price: 20 },
     { id: "mirrorsSmallMedium", name: "Mirrors small / medium", note: "Small or medium mirror", price: 15 },
     { id: "mirrorsLarge", name: "Mirrors large", note: "Larger mirror", price: 50 },
@@ -155,10 +154,9 @@ function updateQuote() {
   const count = Math.max(1, Number(quantity.value || 1));
   const hours = Math.max(0, Number(extraHours.value || 0));
   const hourly = findItem("hourly")?.price || 0;
-  const minimum = findItem("minimum")?.price || 0;
   const travel = travelFee.checked ? findItem("travel")?.price || 0 : 0;
   const base = (baseItem?.price || 0) * count;
-  const total = Math.max(minimum, base + hours * hourly + travel);
+  const total = base + hours * hourly + travel;
 
   quoteTotal.textContent = money.format(total);
   customerMessage.value = `Hi, this is Jose. I can help with the ${baseItem?.name.toLowerCase() || "job"}. Based on the details, my estimated price is ${money.format(total)}. Please send me the item link or photos, your location, and the best time for you so I can confirm the final price. Thanks.`;

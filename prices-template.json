@@ -1,6 +1,5 @@
 {
   "assembly": [
-    { "id": "minimum", "name": "Minimum job", "note": "Use this even for small jobs", "price": 75 },
     { "id": "curtainRods", "name": "Curtain rods", "note": "Per basic curtain rod", "price": 20 },
     { "id": "mirrorsSmallMedium", "name": "Mirrors small / medium", "note": "Small or medium mirror", "price": 15 },
     { "id": "mirrorsLarge", "name": "Mirrors large", "note": "Larger mirror", "price": 50 },
