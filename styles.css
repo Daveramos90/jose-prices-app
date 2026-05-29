@@ -163,6 +163,16 @@ textarea {
   display: grid;
 }
 
+.tax-fields {
+  display: none;
+  grid-template-columns: 1fr 130px;
+  gap: 12px;
+}
+
+.tax-fields.active {
+  display: grid;
+}
+
 .material-add {
   display: grid;
   grid-template-columns: 1fr 76px 110px;
@@ -388,6 +398,7 @@ textarea {
   .grid-two,
   .material-add,
   .material-row,
+  .tax-fields,
   .backup-actions,
   .price-row {
     grid-template-columns: 1fr;

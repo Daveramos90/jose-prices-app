@@ -49,6 +49,7 @@ const defaultData = {
 
 const storageKey = "jose-pricing-v3";
 const customQuoteStorageKey = "jose-custom-quote-v1";
+const taxSettingsStorageKey = "jose-tax-settings-v1";
 const removedPriceIds = ["minimum", "chandelier"];
 const forcedPriceUpdates = {
   travel: 36.25
@@ -92,6 +93,10 @@ const customLaborRate = document.querySelector("#customLaborRate");
 const materialCost = document.querySelector("#materialCost");
 const materialPickup = document.querySelector("#materialPickup");
 const travelFee = document.querySelector("#travelFee");
+const salesTax = document.querySelector("#salesTax");
+const taxFields = document.querySelector("#taxFields");
+const taxState = document.querySelector("#taxState");
+const localTaxRate = document.querySelector("#localTaxRate");
 const quoteTotal = document.querySelector("#quoteTotal");
 const quoteBreakdown = document.querySelector("#quoteBreakdown");
 const customerMessage = document.querySelector("#customerMessage");
@@ -113,6 +118,61 @@ const addMaterial = document.querySelector("#addMaterial");
 const materialRows = document.querySelector("#materialRows");
 const customMaterialTotal = document.querySelector("#customMaterialTotal");
 let customQuote = loadCustomQuote();
+let taxSettings = loadTaxSettings();
+
+const stateTaxRates = {
+  AL: { name: "Alabama", rate: 4 },
+  AK: { name: "Alaska", rate: 0 },
+  AZ: { name: "Arizona", rate: 5.6 },
+  AR: { name: "Arkansas", rate: 6.5 },
+  CA: { name: "California", rate: 6.25 },
+  CO: { name: "Colorado", rate: 2.9 },
+  CT: { name: "Connecticut", rate: 6.35 },
+  DE: { name: "Delaware", rate: 0 },
+  DC: { name: "District of Columbia", rate: 6 },
+  FL: { name: "Florida", rate: 6 },
+  GA: { name: "Georgia", rate: 4 },
+  HI: { name: "Hawaii", rate: 4 },
+  ID: { name: "Idaho", rate: 6 },
+  IL: { name: "Illinois", rate: 6.25 },
+  IN: { name: "Indiana", rate: 7 },
+  IA: { name: "Iowa", rate: 6 },
+  KS: { name: "Kansas", rate: 6.5 },
+  KY: { name: "Kentucky", rate: 6 },
+  LA: { name: "Louisiana", rate: 5 },
+  ME: { name: "Maine", rate: 5.5 },
+  MD: { name: "Maryland", rate: 6 },
+  MA: { name: "Massachusetts", rate: 6.25 },
+  MI: { name: "Michigan", rate: 6 },
+  MN: { name: "Minnesota", rate: 6.875 },
+  MS: { name: "Mississippi", rate: 7 },
+  MO: { name: "Missouri", rate: 4.225 },
+  MT: { name: "Montana", rate: 0 },
+  NE: { name: "Nebraska", rate: 5.5 },
+  NV: { name: "Nevada", rate: 6.85 },
+  NH: { name: "New Hampshire", rate: 0 },
+  NJ: { name: "New Jersey", rate: 6.625 },
+  NM: { name: "New Mexico", rate: 4.875 },
+  NY: { name: "New York", rate: 4 },
+  NC: { name: "North Carolina", rate: 4.75 },
+  ND: { name: "North Dakota", rate: 5 },
+  OH: { name: "Ohio", rate: 5.75 },
+  OK: { name: "Oklahoma", rate: 4.5 },
+  OR: { name: "Oregon", rate: 0 },
+  PA: { name: "Pennsylvania", rate: 6 },
+  RI: { name: "Rhode Island", rate: 7 },
+  SC: { name: "South Carolina", rate: 6 },
+  SD: { name: "South Dakota", rate: 4.2 },
+  TN: { name: "Tennessee", rate: 7 },
+  TX: { name: "Texas", rate: 6.25 },
+  UT: { name: "Utah", rate: 4.85 },
+  VT: { name: "Vermont", rate: 6 },
+  VA: { name: "Virginia", rate: 4.3 },
+  WA: { name: "Washington", rate: 6.5 },
+  WV: { name: "West Virginia", rate: 6 },
+  WI: { name: "Wisconsin", rate: 5 },
+  WY: { name: "Wyoming", rate: 4 }
+};
 
 function loadData() {
   const saved = localStorage.getItem(storageKey);
@@ -177,6 +237,51 @@ function mergeSavedData(savedData) {
 function saveData() {
   localStorage.setItem(storageKey, JSON.stringify(data));
   backupStatus.textContent = "Saved on this device.";
+}
+
+function loadTaxSettings() {
+  const saved = localStorage.getItem(taxSettingsStorageKey);
+  if (!saved) return { state: "TX", local: 2, enabled: false };
+
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      state: parsed.state || "TX",
+      local: Number(parsed.local || 0),
+      enabled: Boolean(parsed.enabled)
+    };
+  } catch {
+    return { state: "TX", local: 2, enabled: false };
+  }
+}
+
+function saveTaxSettings() {
+  taxSettings = {
+    state: taxState.value,
+    local: Number(localTaxRate.value || 0),
+    enabled: salesTax.checked
+  };
+  localStorage.setItem(taxSettingsStorageKey, JSON.stringify(taxSettings));
+}
+
+function renderTaxStates() {
+  taxState.innerHTML = "";
+
+  Object.entries(stateTaxRates).forEach(([code, state]) => {
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = `${state.name} - ${state.rate}%`;
+    taxState.appendChild(option);
+  });
+
+  taxState.value = taxSettings.state;
+  localTaxRate.value = taxSettings.local;
+  salesTax.checked = taxSettings.enabled;
+}
+
+function totalTaxRate() {
+  const stateRate = stateTaxRates[taxState.value]?.rate || 0;
+  return stateRate + Number(localTaxRate.value || 0);
 }
 
 function loadCustomQuote() {
@@ -343,15 +448,19 @@ function updateQuote() {
   const travel = travelFee.checked ? findItem("travel")?.price || 0 : 0;
   const base = (baseItem?.price || 0) * count;
   const extra = hours * hourly;
-  const total = roundPrice(base + extra + materialsWithMarkup + pickup + travel);
+  const subtotal = roundPrice(base + extra + materialsWithMarkup + pickup + travel);
+  const taxRate = totalTaxRate();
+  const tax = salesTax.checked ? roundPrice(subtotal * (taxRate / 100)) : 0;
+  const total = roundPrice(subtotal + tax);
 
   customQuoteFields.classList.toggle("active", isCustomQuote);
+  taxFields.classList.toggle("active", salesTax.checked);
   extraHoursLabel.textContent = isCustomQuote ? "Labor hours" : "Extra hours";
 
   quoteTotal.textContent = money.format(total);
   quoteBreakdown.textContent = isCustomQuote
-    ? `Base: ${money.format(roundPrice(base))} + labor: ${money.format(roundPrice(extra))} + materials: ${money.format(roundPrice(materialsWithMarkup))} + pickup: ${money.format(roundPrice(pickup))} + gas/miles: ${money.format(roundPrice(travel))}`
-    : `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))}`;
+    ? `Base: ${money.format(roundPrice(base))} + labor: ${money.format(roundPrice(extra))} + materials: ${money.format(roundPrice(materialsWithMarkup))} + pickup: ${money.format(roundPrice(pickup))} + gas/miles: ${money.format(roundPrice(travel))} + tax: ${money.format(tax)}`
+    : `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))} + tax: ${money.format(tax)}`;
   const customName = customProjectName.value.trim();
   const jobName = isCustomQuote && customName ? customName : baseItem?.name.toLowerCase() || "job";
   customerMessage.value = `Hi, this is Jose. I can help with the ${jobName}. Based on the details, my estimated price is ${money.format(total)}. Please let me know what date and time works for you and if you can send your address so I have the correct one on file. Thank you.`;
@@ -376,9 +485,14 @@ document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => switchTab(tab.dataset.tab));
 });
 
-[jobType, quantity, extraHours, customLaborRate, materialCost, materialPickup, travelFee].forEach((input) => {
+[jobType, quantity, extraHours, customLaborRate, materialCost, materialPickup, travelFee, salesTax, taxState, localTaxRate].forEach((input) => {
   input.addEventListener("input", updateQuote);
   input.addEventListener("change", updateQuote);
+});
+
+[salesTax, taxState, localTaxRate].forEach((input) => {
+  input.addEventListener("input", saveTaxSettings);
+  input.addEventListener("change", saveTaxSettings);
 });
 
 customLaborRate.addEventListener("input", saveCustomLaborRate);
@@ -517,6 +631,7 @@ function renderAll() {
   renderPriceList("custom", "#customList");
   renderPriceList("travel", "#travelList");
   renderMaterials();
+  renderTaxStates();
   syncCustomLaborRate();
   syncCustomQuoteFields();
   renderJobOptions();
