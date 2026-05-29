@@ -31,6 +31,7 @@ const defaultData = {
     { id: "hourly", name: "Hourly rate", note: "Extra work per hour", price: 45 }
   ],
   custom: [
+    { id: "customFurniture", name: "Custom made furniture", note: "Labor hours + material cost + markup", price: 0, quoteMode: "custom" },
     { id: "customHourly", name: "Custom hourly rate", note: "Simple lumber work", price: 55 },
     { id: "swingSetSmall", name: "Swing set small", note: "Depends on size", price: 450 },
     { id: "swingSetLarge", name: "Swing set large", note: "Depends on size", price: 700 },
@@ -80,6 +81,11 @@ const money = new Intl.NumberFormat("en-US", {
 const jobType = document.querySelector("#jobType");
 const quantity = document.querySelector("#quantity");
 const extraHours = document.querySelector("#extraHours");
+const extraHoursLabel = document.querySelector("#extraHoursLabel");
+const customQuoteFields = document.querySelector("#customQuoteFields");
+const customLaborRate = document.querySelector("#customLaborRate");
+const materialCost = document.querySelector("#materialCost");
+const materialPickup = document.querySelector("#materialPickup");
 const travelFee = document.querySelector("#travelFee");
 const quoteTotal = document.querySelector("#quoteTotal");
 const quoteBreakdown = document.querySelector("#quoteBreakdown");
@@ -158,6 +164,18 @@ function saveData() {
   backupStatus.textContent = "Saved on this device.";
 }
 
+function syncCustomLaborRate() {
+  const customHourly = findItem("customHourly");
+  if (customHourly) customLaborRate.value = customHourly.price;
+}
+
+function saveCustomLaborRate() {
+  const customHourly = findItem("customHourly");
+  if (!customHourly) return;
+  customHourly.price = Number(customLaborRate.value || 0);
+  saveData();
+}
+
 function roundPrice(value) {
   return Math.round(Number(value || 0) * 100) / 100;
 }
@@ -168,6 +186,10 @@ function allItems() {
 
 function findItem(id) {
   return allItems().find((item) => item.id === id);
+}
+
+function findSection(id) {
+  return ["assembly", "custom", "travel"].find((section) => data[section].some((item) => item.id === id));
 }
 
 function cleanName(value) {
@@ -199,6 +221,7 @@ function renderPriceList(section, containerId) {
 
     row.querySelector("input").addEventListener("input", (event) => {
       item.price = Number(event.target.value || 0);
+      if (item.id === "customHourly") customLaborRate.value = item.price;
       saveData();
       updateQuote();
     });
@@ -208,34 +231,45 @@ function renderPriceList(section, containerId) {
 }
 
 function renderJobOptions() {
-  const selected = jobType.value || "medium";
+  const selected = jobType.value || "curtainRods";
   jobType.innerHTML = "";
 
   [...data.assembly, ...data.custom].forEach((item) => {
-    if (item.id === "hourly" || item.id === "materialMarkup") return;
+    if (["hourly", "customHourly", "materialMarkup", "pickup"].includes(item.id)) return;
     const option = document.createElement("option");
     option.value = item.id;
     option.textContent = `${item.name} - ${money.format(item.price)}`;
     jobType.appendChild(option);
   });
 
-  jobType.value = findItem(selected) ? selected : "medium";
+  jobType.value = findItem(selected) ? selected : "curtainRods";
 }
 
 function updateQuote() {
   renderJobOptions();
 
   const baseItem = findItem(jobType.value);
+  const section = findSection(jobType.value);
+  const isCustomQuote = section === "custom";
   const count = Math.max(1, Number(quantity.value || 1));
   const hours = Math.max(0, Number(extraHours.value || 0));
-  const hourly = findItem("hourly")?.price || 0;
+  const hourly = isCustomQuote ? Number(customLaborRate.value || 0) : findItem("hourly")?.price || 0;
+  const materials = isCustomQuote ? Number(materialCost.value || 0) : 0;
+  const markup = isCustomQuote ? findItem("materialMarkup")?.price || 0 : 0;
+  const materialsWithMarkup = materials + materials * (markup / 100);
+  const pickup = isCustomQuote && materialPickup.checked ? findItem("pickup")?.price || 0 : 0;
   const travel = travelFee.checked ? findItem("travel")?.price || 0 : 0;
   const base = (baseItem?.price || 0) * count;
   const extra = hours * hourly;
-  const total = roundPrice(base + extra + travel);
+  const total = roundPrice(base + extra + materialsWithMarkup + pickup + travel);
+
+  customQuoteFields.classList.toggle("active", isCustomQuote);
+  extraHoursLabel.textContent = isCustomQuote ? "Labor hours" : "Extra hours";
 
   quoteTotal.textContent = money.format(total);
-  quoteBreakdown.textContent = `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))}`;
+  quoteBreakdown.textContent = isCustomQuote
+    ? `Base: ${money.format(roundPrice(base))} + labor: ${money.format(roundPrice(extra))} + materials: ${money.format(roundPrice(materialsWithMarkup))} + pickup: ${money.format(roundPrice(pickup))} + gas/miles: ${money.format(roundPrice(travel))}`
+    : `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))}`;
   customerMessage.value = `Hi, this is Jose. I can help with the ${baseItem?.name.toLowerCase() || "job"}. Based on the details, my estimated price is ${money.format(total)}. Please send me the item link or photos, your location, and the best time for you so I can confirm the final price. Thanks.`;
 }
 
@@ -247,16 +281,24 @@ function switchTab(tabId) {
   document.querySelectorAll(".price-section").forEach((section) => {
     section.classList.toggle("active", section.id === tabId);
   });
+
+  if (tabId === "custom") {
+    jobType.value = "customFurniture";
+    updateQuote();
+  }
 }
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => switchTab(tab.dataset.tab));
 });
 
-[jobType, quantity, extraHours, travelFee].forEach((input) => {
+[jobType, quantity, extraHours, customLaborRate, materialCost, materialPickup, travelFee].forEach((input) => {
   input.addEventListener("input", updateQuote);
   input.addEventListener("change", updateQuote);
 });
+
+customLaborRate.addEventListener("input", saveCustomLaborRate);
+customLaborRate.addEventListener("change", saveCustomLaborRate);
 
 copyMessage.addEventListener("click", async () => {
   if (navigator.clipboard) {
@@ -341,6 +383,7 @@ function renderAll() {
   renderPriceList("assembly", "#assemblyList");
   renderPriceList("custom", "#customList");
   renderPriceList("travel", "#travelList");
+  syncCustomLaborRate();
   renderJobOptions();
   updateQuote();
 }
