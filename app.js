@@ -13,7 +13,10 @@ const defaultData = {
     { id: "knobs", name: "Kitchen / drawer knobs", note: "Per knob", price: 10 },
     { id: "entertainmentCenter", name: "Entertainment center", note: "Assembly", price: 80 },
     { id: "tvMount", name: "TV mount", note: "$92 each TV", price: 92 },
-    { id: "chandelier", name: "Chandelier", note: "Depends on weight, height, and complexity", price: 400 },
+    { id: "chandelierBasic", name: "Chandelier basic swap", note: "Standard ceiling, existing wiring and box", price: 250 },
+    { id: "chandelierNewLocation", name: "Chandelier new location", note: "Cutting drywall, new wire, new ceiling box", price: 650 },
+    { id: "chandelierHighCeiling", name: "Chandelier high ceiling / foyer", note: "12-20+ ft, tall ladder/scaffold, extra help", price: 1200 },
+    { id: "chandelierHeavy", name: "Chandelier heavy fixture", note: "Over 30 lbs, reinforced support and rated box", price: 900 },
     { id: "ceilingFan", name: "Ceiling fan", note: "Each, depends on switch wiring", price: 150 },
     { id: "simpleDoorKnobs", name: "Simple door knobs", note: "Basic door knob", price: 10 },
     { id: "codeLock", name: "Code lock for doors", note: "Keypad/code lock install", price: 50 },
@@ -37,18 +40,24 @@ const defaultData = {
     { id: "pickup", name: "Material pickup", note: "Store pickup and handling", price: 35 }
   ],
   travel: [
-    { id: "travel", name: "Gas / miles fee", note: "Within a 50 mile radius", price: 75 },
+    { id: "travel", name: "Gas / miles fee", note: "Within a 50 mile radius", price: 36.25 },
     { id: "stairs", name: "Stairs / heavy item", note: "Extra effort fee", price: 25 },
     { id: "sameDay", name: "Same-day job", note: "Rush fee", price: 30 }
   ]
 };
 
 const storageKey = "jose-pricing-v3";
-const removedPriceIds = ["minimum"];
+const removedPriceIds = ["minimum", "chandelier"];
+const forcedPriceUpdates = {
+  travel: 36.25
+};
 const sectionOnlyIds = {
   assembly: [
     "tvMount",
-    "chandelier",
+    "chandelierBasic",
+    "chandelierNewLocation",
+    "chandelierHighCeiling",
+    "chandelierHeavy",
     "ceilingFan",
     "simpleDoorKnobs",
     "codeLock",
@@ -64,7 +73,8 @@ let data = loadData();
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
-  maximumFractionDigits: 0
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2
 });
 
 const jobType = document.querySelector("#jobType");
@@ -103,6 +113,11 @@ function cleanupData(source) {
     source[section] = (source[section] || []).filter((item) => !removedPriceIds.includes(item.id));
   });
 
+  Object.entries(forcedPriceUpdates).forEach(([id, price]) => {
+    const item = allItemsFrom(source).find((priceItem) => priceItem.id === id);
+    if (item) item.price = price;
+  });
+
   Object.entries(sectionOnlyIds).forEach(([correctSection, ids]) => {
     ids.forEach((id) => {
       ["assembly", "custom", "travel"].forEach((section) => {
@@ -113,6 +128,10 @@ function cleanupData(source) {
   });
 
   return source;
+}
+
+function allItemsFrom(source) {
+  return [...(source.assembly || []), ...(source.custom || []), ...(source.travel || [])];
 }
 
 function mergeSavedData(savedData) {
@@ -140,7 +159,7 @@ function saveData() {
 }
 
 function roundPrice(value) {
-  return Math.round(Number(value || 0));
+  return Math.round(Number(value || 0) * 100) / 100;
 }
 
 function allItems() {
@@ -175,7 +194,7 @@ function renderPriceList(section, containerId) {
         <strong>${item.name}</strong>
         <span>${item.note}</span>
       </label>
-      <input id="${item.id}" inputmode="decimal" type="number" min="0" step="1" value="${item.price}">
+      <input id="${item.id}" inputmode="decimal" type="number" min="0" step="0.01" value="${item.price}">
     `;
 
     row.querySelector("input").addEventListener("input", (event) => {
