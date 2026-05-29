@@ -12,6 +12,7 @@ const defaultData = {
     { id: "framesLarge", name: "Hang frames large", note: "Larger frame", price: 50 },
     { id: "knobs", name: "Kitchen / drawer knobs", note: "Per knob", price: 10 },
     { id: "entertainmentCenter", name: "Entertainment center", note: "Assembly", price: 80 },
+    { id: "tvMount", name: "TV mount", note: "$92 each TV", price: 92 },
     { id: "diningTableLow", name: "Dining table simple", note: "Simple dining table", price: 85 },
     { id: "diningTableHigh", name: "Dining table larger", note: "Larger or more complex table", price: 150 },
     { id: "pantryCabinet", name: "Pantry cabinet", note: "Assembly", price: 90 },
@@ -32,7 +33,6 @@ const defaultData = {
     { id: "travel", name: "Gas / miles fee", note: "Within a 50 mile radius", price: 75 },
     { id: "chandelier", name: "Chandelier", note: "Depends on weight, height, and complexity", price: 400 },
     { id: "ceilingFan", name: "Ceiling fan", note: "Each, depends on switch wiring", price: 150 },
-    { id: "tvMount", name: "TV mount", note: "Each TV", price: 92 },
     { id: "simpleDoorKnobs", name: "Simple door knobs", note: "Basic door knob", price: 10 },
     { id: "codeLock", name: "Code lock for doors", note: "Keypad/code lock install", price: 50 },
     { id: "lockKeyDoorKnob", name: "Lock key door knob", note: "Locking keyed door knob", price: 20 },
@@ -58,6 +58,7 @@ const quantity = document.querySelector("#quantity");
 const extraHours = document.querySelector("#extraHours");
 const travelFee = document.querySelector("#travelFee");
 const quoteTotal = document.querySelector("#quoteTotal");
+const quoteBreakdown = document.querySelector("#quoteBreakdown");
 const customerMessage = document.querySelector("#customerMessage");
 const copyMessage = document.querySelector("#copyMessage");
 const resetButton = document.querySelector("#resetButton");
@@ -94,6 +95,10 @@ function cleanupData(source) {
 function saveData() {
   localStorage.setItem(storageKey, JSON.stringify(data));
   backupStatus.textContent = "Saved on this device.";
+}
+
+function roundPrice(value) {
+  return Math.round(Number(value || 0));
 }
 
 function allItems() {
@@ -165,9 +170,11 @@ function updateQuote() {
   const hourly = findItem("hourly")?.price || 0;
   const travel = travelFee.checked ? findItem("travel")?.price || 0 : 0;
   const base = (baseItem?.price || 0) * count;
-  const total = base + hours * hourly + travel;
+  const extra = hours * hourly;
+  const total = roundPrice(base + extra + travel);
 
   quoteTotal.textContent = money.format(total);
+  quoteBreakdown.textContent = `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))}`;
   customerMessage.value = `Hi, this is Jose. I can help with the ${baseItem?.name.toLowerCase() || "job"}. Based on the details, my estimated price is ${money.format(total)}. Please send me the item link or photos, your location, and the best time for you so I can confirm the final price. Thanks.`;
 }
 
