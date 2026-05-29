@@ -354,10 +354,7 @@ function updateQuote() {
     : `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))}`;
   const customName = customProjectName.value.trim();
   const jobName = isCustomQuote && customName ? customName : baseItem?.name.toLowerCase() || "job";
-  const materialText = isCustomQuote && customQuote.materials.length
-    ? ` This includes materials listed for the job and labor time.`
-    : "";
-  customerMessage.value = `Hi, this is Jose. I can help with the ${jobName}. Based on the details, my estimated price is ${money.format(total)}.${materialText} Please send me the measurements, photos, location, and the best time for you so I can confirm the final price. Thanks.`;
+  customerMessage.value = `Hi, this is Jose. I can help with the ${jobName}. Based on the details, my estimated price is ${money.format(total)}. Please let me know what date and time works for you and if you can send your address so I have the correct one on file. Thank you.`;
 }
 
 function switchTab(tabId) {
