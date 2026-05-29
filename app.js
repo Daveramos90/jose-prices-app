@@ -1,28 +1,50 @@
 const defaultData = {
   assembly: [
-    { id: "minimum", name: "Minimum job", note: "Use this even for small jobs", price: 60 },
-    { id: "small", name: "Small item", note: "Chair, nightstand, small shelf", price: 45 },
-    { id: "medium", name: "Medium item", note: "Desk, TV stand, cabinet", price: 80 },
-    { id: "large", name: "Large item", note: "Dresser, wardrobe, bunk bed", price: 140 },
-    { id: "bed", name: "Bed frame", note: "Standard bed assembly", price: 90 },
-    { id: "dresser", name: "Dresser", note: "Adjust higher for many drawers", price: 120 },
+    { id: "minimum", name: "Minimum job", note: "Use this even for small jobs", price: 75 },
+    { id: "curtainRods", name: "Curtain rods", note: "Per basic curtain rod", price: 20 },
+    { id: "mirrorsSmallMedium", name: "Mirrors small / medium", note: "Small or medium mirror", price: 15 },
+    { id: "mirrorsLarge", name: "Mirrors large", note: "Larger mirror", price: 50 },
+    { id: "dressers", name: "Dressers", note: "Standard dresser assembly", price: 80 },
+    { id: "bedsFullQueen", name: "Beds full to queen", note: "Full, twin, or queen bed", price: 75 },
+    { id: "bedsKing", name: "King size bed", note: "King bed assembly", price: 100 },
+    { id: "patioSet", name: "Outdoor patio set", note: "Sofa and two chairs", price: 90 },
+    { id: "patioMoreItems", name: "Outdoor patio more items", note: "Larger patio set", price: 130 },
+    { id: "framesSmallMedium", name: "Hang frames small / medium", note: "Small or medium frame", price: 15 },
+    { id: "framesLarge", name: "Hang frames large", note: "Larger frame", price: 50 },
+    { id: "knobs", name: "Kitchen / drawer knobs", note: "Per knob", price: 10 },
+    { id: "entertainmentCenter", name: "Entertainment center", note: "Assembly", price: 80 },
+    { id: "diningTableLow", name: "Dining table simple", note: "Simple dining table", price: 85 },
+    { id: "diningTableHigh", name: "Dining table larger", note: "Larger or more complex table", price: 150 },
+    { id: "pantryCabinet", name: "Pantry cabinet", note: "Assembly", price: 90 },
+    { id: "babyCribSimple", name: "Baby crib simple", note: "Basic crib", price: 100 },
+    { id: "babyCribComplex", name: "Baby crib complex", note: "Complex crib", price: 200 },
     { id: "hourly", name: "Hourly rate", note: "Extra work per hour", price: 45 }
   ],
   custom: [
     { id: "customHourly", name: "Custom hourly rate", note: "Simple lumber work", price: 55 },
-    { id: "smallBuild", name: "Small custom build", note: "Small shelf, brace, frame", price: 120 },
-    { id: "mediumBuild", name: "Medium custom build", note: "Bench, table base, storage", price: 250 },
+    { id: "swingSetSmall", name: "Swing set small", note: "Depends on size", price: 450 },
+    { id: "swingSetLarge", name: "Swing set large", note: "Depends on size", price: 700 },
+    { id: "gazeboSmall", name: "Gazebo / pergola small", note: "Depends on size", price: 460 },
+    { id: "gazeboLarge", name: "Gazebo / pergola large", note: "Depends on size", price: 860 },
     { id: "materialMarkup", name: "Material markup %", note: "Add on top of material cost", price: 20 },
     { id: "pickup", name: "Material pickup", note: "Store pickup and handling", price: 35 }
   ],
   travel: [
-    { id: "travel", name: "Travel fee", note: "Add when job is far", price: 25 },
+    { id: "travel", name: "Gas / miles fee", note: "Within a 50 mile radius", price: 75 },
+    { id: "chandelier", name: "Chandelier", note: "Depends on weight, height, and complexity", price: 400 },
+    { id: "ceilingFan", name: "Ceiling fan", note: "Each, depends on switch wiring", price: 150 },
+    { id: "tvMount", name: "TV mount", note: "Each TV", price: 92 },
+    { id: "simpleDoorKnobs", name: "Simple door knobs", note: "Basic door knob", price: 10 },
+    { id: "codeLock", name: "Code lock for doors", note: "Keypad/code lock install", price: 50 },
+    { id: "lockKeyDoorKnob", name: "Lock key door knob", note: "Locking keyed door knob", price: 20 },
+    { id: "smartDoorbellLow", name: "Smart doorbell simple", note: "Simple install", price: 50 },
+    { id: "smartDoorbellHigh", name: "Smart doorbell complex", note: "More difficult install", price: 90 },
     { id: "stairs", name: "Stairs / heavy item", note: "Extra effort fee", price: 25 },
     { id: "sameDay", name: "Same-day job", note: "Rush fee", price: 30 }
   ]
 };
 
-const storageKey = "jose-pricing-v1";
+const storageKey = "jose-pricing-v2";
 let data = loadData();
 
 const money = new Intl.NumberFormat("en-US", {
@@ -42,6 +64,9 @@ const resetButton = document.querySelector("#resetButton");
 const exportPrices = document.querySelector("#exportPrices");
 const importPrices = document.querySelector("#importPrices");
 const backupStatus = document.querySelector("#backupStatus");
+const pricePaste = document.querySelector("#pricePaste");
+const applyPastedPrices = document.querySelector("#applyPastedPrices");
+const pasteStatus = document.querySelector("#pasteStatus");
 
 function loadData() {
   const saved = localStorage.getItem(storageKey);
@@ -69,6 +94,18 @@ function allItems() {
 
 function findItem(id) {
   return allItems().find((item) => item.id === id);
+}
+
+function cleanName(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function findItemByName(name) {
+  const cleaned = cleanName(name);
+  return allItems().find((item) => {
+    const itemName = cleanName(item.name);
+    return cleaned === itemName || cleaned.includes(itemName) || itemName.includes(cleaned);
+  });
 }
 
 function renderPriceList(section, containerId) {
@@ -189,6 +226,32 @@ importPrices.addEventListener("change", async (event) => {
   }
 
   event.target.value = "";
+});
+
+applyPastedPrices.addEventListener("click", () => {
+  const lines = pricePaste.value.split(/\r?\n/);
+  let updatedCount = 0;
+
+  lines.forEach((line) => {
+    const match = line.match(/^(.+?)\s+\$?(\d+(?:\.\d{1,2})?)\s*%?$/);
+    if (!match) return;
+
+    const [, rawName, rawPrice] = match;
+    const item = findItemByName(rawName);
+    if (!item) return;
+
+    item.price = Number(rawPrice);
+    updatedCount += 1;
+  });
+
+  if (updatedCount === 0) {
+    pasteStatus.textContent = "No matching prices found. Try one price per line, like: Bed frame 100";
+    return;
+  }
+
+  saveData();
+  renderAll();
+  pasteStatus.textContent = `Updated ${updatedCount} price${updatedCount === 1 ? "" : "s"}.`;
 });
 
 resetButton.addEventListener("click", () => {
