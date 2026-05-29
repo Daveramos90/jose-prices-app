@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1f4f46">
+    <title>Jose Prices</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Personal work app</p>
+          <h1>Jose Prices</h1>
+        </div>
+        <button class="icon-button" id="resetButton" type="button" title="Reset prices" aria-label="Reset prices">
+          Reset
+        </button>
+      </header>
+
+      <section class="quote-panel" aria-labelledby="quoteTitle">
+        <div>
+          <p class="eyebrow">Quick quote</p>
+          <h2 id="quoteTitle">Build a price</h2>
+        </div>
+
+        <label class="field">
+          <span>Job type</span>
+          <select id="jobType"></select>
+        </label>
+
+        <div class="grid-two">
+          <label class="field">
+            <span>Quantity</span>
+            <input id="quantity" type="number" min="1" step="1" value="1">
+          </label>
+          <label class="field">
+            <span>Extra hours</span>
+            <input id="extraHours" type="number" min="0" step="0.5" value="0">
+          </label>
+        </div>
+
+        <label class="check-row">
+          <input id="travelFee" type="checkbox">
+          <span>Add travel fee</span>
+        </label>
+
+        <div class="total-box">
+          <span>Suggested price</span>
+          <strong id="quoteTotal">$0</strong>
+        </div>
+
+        <button class="primary-button" id="copyMessage" type="button">Copy customer message</button>
+        <textarea id="customerMessage" rows="5" readonly></textarea>
+      </section>
+
+      <section class="backup-panel" aria-labelledby="backupTitle">
+        <div>
+          <p class="eyebrow">Price file</p>
+          <h2 id="backupTitle">Save your updates</h2>
+        </div>
+        <div class="backup-actions">
+          <button class="secondary-button" id="exportPrices" type="button">Export prices</button>
+          <label class="secondary-button file-button" for="importPrices">Import prices</label>
+          <input id="importPrices" type="file" accept="application/json,.json">
+        </div>
+        <p id="backupStatus" class="status-text">Your changes save automatically on this device.</p>
+      </section>
+
+      <nav class="tabs" aria-label="Price sections">
+        <button class="tab active" type="button" data-tab="assembly">Assembly</button>
+        <button class="tab" type="button" data-tab="custom">Custom</button>
+        <button class="tab" type="button" data-tab="travel">Travel</button>
+      </nav>
+
+      <section class="price-section active" id="assembly" aria-labelledby="assemblyTitle">
+        <div class="section-heading">
+          <h2 id="assemblyTitle">Furniture Assembly</h2>
+          <p>Tap any price to change it.</p>
+        </div>
+        <div class="price-list" id="assemblyList"></div>
+      </section>
+
+      <section class="price-section" id="custom" aria-labelledby="customTitle">
+        <div class="section-heading">
+          <h2 id="customTitle">Custom Lumber Work</h2>
+          <p>For simple work with 2x4s, plywood, shelves, frames, and small builds.</p>
+        </div>
+        <div class="price-list" id="customList"></div>
+      </section>
+
+      <section class="price-section" id="travel" aria-labelledby="travelTitle">
+        <div class="section-heading">
+          <h2 id="travelTitle">Travel & Extras</h2>
+          <p>Use these when the job is far, heavy, upstairs, or needs pickup.</p>
+        </div>
+        <div class="price-list" id="travelList"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

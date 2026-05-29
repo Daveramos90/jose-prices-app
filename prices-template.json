@@ -1,0 +1,98 @@
+{
+  "assembly": [
+    {
+      "id": "minimum",
+      "name": "Minimum job",
+      "note": "Use this even for small jobs",
+      "price": 60
+    },
+    {
+      "id": "small",
+      "name": "Small item",
+      "note": "Chair, nightstand, small shelf",
+      "price": 45
+    },
+    {
+      "id": "medium",
+      "name": "Medium item",
+      "note": "Desk, TV stand, cabinet",
+      "price": 80
+    },
+    {
+      "id": "large",
+      "name": "Large item",
+      "note": "Dresser, wardrobe, bunk bed",
+      "price": 140
+    },
+    {
+      "id": "bed",
+      "name": "Bed frame",
+      "note": "Standard bed assembly",
+      "price": 90
+    },
+    {
+      "id": "dresser",
+      "name": "Dresser",
+      "note": "Adjust higher for many drawers",
+      "price": 120
+    },
+    {
+      "id": "hourly",
+      "name": "Hourly rate",
+      "note": "Extra work per hour",
+      "price": 45
+    }
+  ],
+  "custom": [
+    {
+      "id": "customHourly",
+      "name": "Custom hourly rate",
+      "note": "Simple lumber work",
+      "price": 55
+    },
+    {
+      "id": "smallBuild",
+      "name": "Small custom build",
+      "note": "Small shelf, brace, frame",
+      "price": 120
+    },
+    {
+      "id": "mediumBuild",
+      "name": "Medium custom build",
+      "note": "Bench, table base, storage",
+      "price": 250
+    },
+    {
+      "id": "materialMarkup",
+      "name": "Material markup %",
+      "note": "Add on top of material cost",
+      "price": 20
+    },
+    {
+      "id": "pickup",
+      "name": "Material pickup",
+      "note": "Store pickup and handling",
+      "price": 35
+    }
+  ],
+  "travel": [
+    {
+      "id": "travel",
+      "name": "Travel fee",
+      "note": "Add when job is far",
+      "price": 25
+    },
+    {
+      "id": "stairs",
+      "name": "Stairs / heavy item",
+      "note": "Extra effort fee",
+      "price": 25
+    },
+    {
+      "id": "sameDay",
+      "name": "Same-day job",
+      "note": "Rush fee",
+      "price": 30
+    }
+  ]
+}
