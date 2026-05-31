@@ -1,9 +1,9 @@
 {
-  "name": "Jose Prices",
-  "short_name": "Jose Prices",
+  "name": "Lineage Repair Prices",
+  "short_name": "Lineage Repair",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#1f4f46",
+  "background_color": "#111827",
+  "theme_color": "#111827",
   "icons": []
 }

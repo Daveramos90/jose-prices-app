@@ -17,6 +17,8 @@ const defaultData = {
     { id: "chandelierNewLocation", name: "Chandelier new location", note: "Cutting drywall, new wire, new ceiling box", price: 650 },
     { id: "chandelierHighCeiling", name: "Chandelier high ceiling / foyer", note: "12-20+ ft, tall ladder/scaffold, extra help", price: 1200 },
     { id: "chandelierHeavy", name: "Chandelier heavy fixture", note: "Over 30 lbs, reinforced support and rated box", price: 900 },
+    { id: "faucet", name: "Bathroom faucet", note: "Labor only standard swap, usually $130-$250", price: 150 },
+    { id: "kitchenFaucet", name: "Kitchen faucet", note: "Labor only standard swap, usually $150-$300", price: 200 },
     { id: "ceilingFan", name: "Ceiling fan", note: "Each, depends on switch wiring", price: 150 },
     { id: "simpleDoorKnobs", name: "Simple door knobs", note: "Basic door knob", price: 10 },
     { id: "codeLock", name: "Code lock for doors", note: "Keypad/code lock install", price: 50 },
@@ -52,7 +54,9 @@ const customQuoteStorageKey = "jose-custom-quote-v1";
 const taxSettingsStorageKey = "jose-tax-settings-v1";
 const removedPriceIds = ["minimum", "chandelier"];
 const forcedPriceUpdates = {
-  travel: 36.25
+  travel: 36.25,
+  faucet: 150,
+  kitchenFaucet: 200
 };
 const sectionOnlyIds = {
   assembly: [
@@ -93,6 +97,8 @@ const customLaborRate = document.querySelector("#customLaborRate");
 const materialCost = document.querySelector("#materialCost");
 const materialPickup = document.querySelector("#materialPickup");
 const travelFee = document.querySelector("#travelFee");
+const stairsFee = document.querySelector("#stairsFee");
+const sameDayFee = document.querySelector("#sameDayFee");
 const salesTax = document.querySelector("#salesTax");
 const taxFields = document.querySelector("#taxFields");
 const taxState = document.querySelector("#taxState");
@@ -446,9 +452,11 @@ function updateQuote() {
   const materialsWithMarkup = materials + materials * (markup / 100);
   const pickup = isCustomQuote && materialPickup.checked ? findItem("pickup")?.price || 0 : 0;
   const travel = travelFee.checked ? findItem("travel")?.price || 0 : 0;
+  const stairs = stairsFee.checked ? findItem("stairs")?.price || 0 : 0;
+  const sameDay = sameDayFee.checked ? findItem("sameDay")?.price || 0 : 0;
   const base = (baseItem?.price || 0) * count;
   const extra = hours * hourly;
-  const subtotal = roundPrice(base + extra + materialsWithMarkup + pickup + travel);
+  const subtotal = roundPrice(base + extra + materialsWithMarkup + pickup + travel + stairs + sameDay);
   const taxRate = totalTaxRate();
   const tax = salesTax.checked ? roundPrice(subtotal * (taxRate / 100)) : 0;
   const total = roundPrice(subtotal + tax);
@@ -459,11 +467,11 @@ function updateQuote() {
 
   quoteTotal.textContent = money.format(total);
   quoteBreakdown.textContent = isCustomQuote
-    ? `Base: ${money.format(roundPrice(base))} + labor: ${money.format(roundPrice(extra))} + materials: ${money.format(roundPrice(materialsWithMarkup))} + pickup: ${money.format(roundPrice(pickup))} + gas/miles: ${money.format(roundPrice(travel))} + tax: ${money.format(tax)}`
-    : `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))} + tax: ${money.format(tax)}`;
+    ? `Base: ${money.format(roundPrice(base))} + labor: ${money.format(roundPrice(extra))} + materials: ${money.format(roundPrice(materialsWithMarkup))} + pickup: ${money.format(roundPrice(pickup))} + gas/miles: ${money.format(roundPrice(travel))} + stairs/heavy: ${money.format(roundPrice(stairs))} + same-day: ${money.format(roundPrice(sameDay))} + tax: ${money.format(tax)}`
+    : `Job: ${money.format(roundPrice(base))} + extra time: ${money.format(roundPrice(extra))} + gas/miles: ${money.format(roundPrice(travel))} + stairs/heavy: ${money.format(roundPrice(stairs))} + same-day: ${money.format(roundPrice(sameDay))} + tax: ${money.format(tax)}`;
   const customName = customProjectName.value.trim();
   const jobName = isCustomQuote && customName ? customName : baseItem?.name.toLowerCase() || "job";
-  customerMessage.value = `Hi, this is Jose. I can help with the ${jobName}. Based on the details, my estimated price is ${money.format(total)}. Please let me know what date and time works for you and if you can send your address so I have the correct one on file. Thank you.`;
+  customerMessage.value = `Hi, this is Lineage Repair. I can help with the ${jobName}. Based on the details, my estimated price is ${money.format(total)}. Please let me know what date and time works for you and if you can send your address so I have the correct one on file. Thank you.`;
 }
 
 function switchTab(tabId) {
@@ -485,7 +493,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => switchTab(tab.dataset.tab));
 });
 
-[jobType, quantity, extraHours, customLaborRate, materialCost, materialPickup, travelFee, salesTax, taxState, localTaxRate].forEach((input) => {
+[jobType, quantity, extraHours, customLaborRate, materialCost, materialPickup, travelFee, stairsFee, sameDayFee, salesTax, taxState, localTaxRate].forEach((input) => {
   input.addEventListener("input", updateQuote);
   input.addEventListener("change", updateQuote);
 });
@@ -565,7 +573,7 @@ exportPrices.addEventListener("click", () => {
   const file = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(file);
-  link.download = "jose-prices-backup.json";
+  link.download = "lineage-repair-prices-backup.json";
   link.click();
   URL.revokeObjectURL(link.href);
   backupStatus.textContent = "Backup file exported.";
